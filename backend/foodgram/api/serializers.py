@@ -1,12 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.db.models import F
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
+from recipe.models import Ingredient, IngredientAmount, Recipe, Tag
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
-from ..recipe.models import Ingredient, IngredientAmount, Recipe, Tag
-from ..user.models import Follow
+from user.models import Follow
 
 User = get_user_model()
 
@@ -97,14 +95,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-    def get_ingredients(self, obj):
-        return obj.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=F('recipe__amount')
-        )
-
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     tag = TagSerializer(many=True, read_only=True)
@@ -122,19 +112,11 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
-    def get_ingredients(self, obj):
-        return obj.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=F('recipe__amount')
-        )
-
-    def validate (self, data):
-        ingredients = self.initial_data.get('ingredients')
+    def validate(self, data):
+        ingredients = self.data.get('ingredients')
         ingredients_set = set()
         for ingredient in ingredients:
-            if type(ingredient.get('amount')) == str:
+            if type(ingredient.get('amount')) is str:
                 if not ingredient.get('amount').isdigit():
                     raise serializers.ValidationError(
                         'Введите число'
@@ -143,12 +125,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Минимальное количество ингредиентов 1'
                 )
-            id = ingredient.get('id')
-            if id in ingredients_set:
+            ingredient_id = ingredient.get('id')
+            if ingredient_id in ingredients_set:
                 raise serializers.ValidationError(
                     'Ингредиент не должен повторяться'
                 )
-            ingredients_set.add(id)
+            ingredients_set.add(ingredient_id)
         data['ingredients'] = ingredients
         return data
 
@@ -169,7 +151,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             instance.tags.add(tag)
 
         for ingredient in ingredients:
-            IngredientAmount.objects.create(
+            IngredientAmount.objects.bulk_create(
                 recipe=instance,
                 ingredients_id=ingredient.get('id'),
                 amount=ingredient.get('amount'))

@@ -1,21 +1,23 @@
 from django.contrib.auth import get_user_model
-from django.db.models import BooleanField, Exists, OuterRef, Value
+from django.db.models import BooleanField, Exists, OuterRef, Sum, Value
+from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from ..recipe.models import Cart, Favorite, Ingredient, Recipe, Tag
+from recipe.models import (Cart, Favorite, Ingredient, IngredientAmount,
+                           Recipe, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
+from user.models import Follow
 
-from ..api.filters import ShopFilter, SearchInt
-from ..api.pagination import PageLimit
-from ..api.permissions import AdminOrReadOnly, AdminUserOrReadOnly
-from ..api.serializers import (FollowSerializer, IngredientSerializer,
-                               RecipeReadSerializer, RecipeWriteSerializer,
-                               ShortRecipeSerializer, TagSerializer)
-from ..user.models import Follow
+from api.filters import SearchInt, ShopFilter
+from api.pagination import PageLimit
+from api.permissions import AdminOrReadOnly, AdminUserOrReadOnly
+from api.serializers import (FollowSerializer, IngredientSerializer,
+                             RecipeReadSerializer, RecipeWriteSerializer,
+                             ShortRecipeSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -39,9 +41,9 @@ class FollowViewSet(UserViewSet):
 
     @action(
         methods=['post'], detail=True, permission_classes=[IsAuthenticated])
-    def subscribe(self, request, id=None):
+    def subscribe(self, request, sub_id=None):
         user = request.user
-        author = get_object_or_404(User, id=id)
+        author = get_object_or_404(User, id=sub_id)
 
         if user == author:
             return Response({
@@ -59,9 +61,9 @@ class FollowViewSet(UserViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
-    def del_subscribe(self, request, id=None):
+    def del_subscribe(self, request, sub_id=None):
         user = request.user
-        author = get_object_or_404(User, id=id)
+        author = get_object_or_404(User, id=sub_id)
         if user == author:
             return Response({
                 'errors': 'Ошибка отписки, нельзя отписываться от самого себя'
@@ -161,29 +163,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
-        user = get_object_or_404(User, username=request.user.username)
-        shopping_cart = user.cart.all()
-        shopping_dict = {}
-        for num in shopping_cart:
-            ingredients_queryset = num.recipe.ingredient.all()
-            for ingredient in ingredients_queryset:
-                name = ingredient.ingredients.name
-                amount = ingredient.amount
-                measurement_unit = ingredient.ingredients.measurement_unit
-                if name not in shopping_dict:
-                    shopping_dict[name] = {
-                        'measurement_unit': measurement_unit,
-                        'amount': amount}
-                else:
-                    shopping_dict[name]['amount'] = (
-                            shopping_dict[name]['amount'] + amount)
+        ingredients = IngredientAmount.objects.filter(
+            recipe__cart__user=request.user).values(
+            'ingredients__name',
+            'ingredients__measurement_unit').annotate(total=Sum('amount'))
 
-        shopping_list = []
-        for index, key in enumerate(shopping_dict, start=1):
-            shopping_list.append(
-                f'{index}. {key} - {shopping_dict[key]["amount"]} '
-                f'{shopping_dict[key]["measurement_unit"]}\n')
+        shopping_cart = '\n'.join([
+            f'{ingredient["ingredients__name"]} - {ingredient["total"]} '
+            f'{ingredient["ingredients__measurement_unit"]}'
+            for ingredient in ingredients
+        ])
         filename = 'shopping_cart.txt'
-        response = HttpResponse(shopping_list, content_type='text/plain')
+        response = HttpResponse(shopping_cart, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={filename}'
         return response

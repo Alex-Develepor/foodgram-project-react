@@ -32,29 +32,20 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        verbose_name='Название',
-        max_length=200
-    )
-    units = models.CharField(
-        verbose_name='Единицы измерения',
-        max_length=200
-    )
+        verbose_name='Название', max_length=200)
+    measurement_unit = models.CharField(
+        verbose_name='Единицы измерения', max_length=20)
 
     class Meta:
         verbose_name = 'Ингридиент'
+        verbose_name_plural = 'Ингридиенты'
         ordering = ['name']
-        constrains = [
-            models.UniqueConstraint(
-                fields=[
-                    'name',
-                    'units',
-                ],
-                name='uniq_for_ingredient'
-            )
-        ]
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'measurement_unit'],
+                                    name='unique_for_ingredient')]
 
-        def __str__(self) -> str:
-            return f'{self.name}'
+    def __str__(self) -> str:
+        return f'{self.name}'
 
 
 class Recipe(models.Model):
@@ -126,23 +117,17 @@ class IngredientAmount(models.Model):
         default=1,
         validators=(
             validators.MinValueValidator(
-                1,
-                message='Минимальное кол-во ингредиентов 1'
-            )
-        )
+                1, message='Минимальное количество ингридиентов 1'),),
+        verbose_name='Количество',
     )
 
     class Meta:
-        verbose_name = 'Кол-во ингредиентов'
         ordering = ['-id']
-        constrains = [
-            models.UniqueConstraint(
-                fields=[
-                    'recipe',
-                    'ingredients'
-                ],
-                name='uniq_ingredients_name'
-            )
+        verbose_name = 'Кол-во ингридиента'
+        verbose_name_plural = 'Количество ингридиентов'
+        constraints = [
+            models.UniqueConstraint(fields=['recipe', 'ingredients'],
+                                    name='unique_ingredients_recipe')
         ]
 
     def __str__(self) -> str:

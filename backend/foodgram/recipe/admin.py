@@ -8,7 +8,6 @@ class TagAdmin(ModelAdmin):
     list_display = (
         'name',
         'slug',
-        'color',
     )
 
 
@@ -16,7 +15,6 @@ class TagAdmin(ModelAdmin):
 class IngredientAdmin(ModelAdmin):
     list_display = (
         'name',
-        'units',
     )
     list_filter = (
         'name',

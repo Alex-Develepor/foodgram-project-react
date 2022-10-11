@@ -1,7 +1,6 @@
-from django_filters import AllValuesMultipleFilter
-from django_filters import rest_framework
+from django_filters import AllValuesMultipleFilter, rest_framework
 from django_filters.widgets import BooleanWidget
-from ..recipe.models import Recipe
+from recipe.models import Recipe
 from rest_framework.filters import SearchFilter
 
 
@@ -15,10 +14,11 @@ class ShopFilter(rest_framework.FilterSet):
         model = Recipe
         fields = [
             'author__id',
-            'tag_slug',
+            'tag',
             'favorited',
             'shopping_cart',
         ]
+
 
 class SearchInt(SearchFilter):
     search_param = 'name'
