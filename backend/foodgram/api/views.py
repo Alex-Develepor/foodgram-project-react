@@ -1,16 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.db.models import BooleanField, Exists, OuterRef, Sum, Value
-from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from recipe.models import (Cart, Favorite, Ingredient, IngredientAmount,
-                           Recipe, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
-from user.models import Follow
 
 from api.filters import SearchInt, ShopFilter
 from api.pagination import PageLimit
@@ -18,6 +14,9 @@ from api.permissions import AdminOrReadOnly, AdminUserOrReadOnly
 from api.serializers import (FollowSerializer, IngredientSerializer,
                              RecipeReadSerializer, RecipeWriteSerializer,
                              ShortRecipeSerializer, TagSerializer)
+from recipe.models import (Cart, Favorite, Ingredient, IngredientAmount,
+                           Recipe, Tag)
+from user.models import Follow
 
 User = get_user_model()
 

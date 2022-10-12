@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
-from recipe.models import Ingredient, IngredientAmount, Recipe, Tag
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
+from recipe.models import Ingredient, IngredientAmount, Recipe, Tag
 from user.models import Follow
 
 User = get_user_model()
@@ -113,7 +114,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        ingredients = self.data.get('ingredients')
+        ingredients = data.get('ingredients')
         ingredients_set = set()
         for ingredient in ingredients:
             if type(ingredient.get('amount')) is str:
@@ -136,7 +137,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
-        tags = self.initial_data.get('tags')
+        tags = validated_data.get('tags')
         recipe = super().create(validated_data)
         return self.add_tags_inredietns(
             recipe,
@@ -147,21 +148,24 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def add_tags_ingredients(self, instance, **validated_data):
         ingredients = validated_data['ingredients']
         tags = validated_data['tags']
-        for tag in tags:
-            instance.tags.add(tag)
-
-        for ingredient in ingredients:
-            IngredientAmount.objects.bulk_create(
+        bunch = [
+            IngredientAmount(
                 recipe=instance,
                 ingredients_id=ingredient.get('id'),
-                amount=ingredient.get('amount'))
+                amount=ingredient.get('amount')
+            )
+            for ingredient in ingredients
+        ]
+        for tag in tags:
+            instance.tags.add(tag)
+        IngredientAmount.objects.bulk_create(bunch)
         return instance
 
     def update(self, instance, validated_data):
         instance.ingredients.clear()
         instance.tags.clear()
         ingredients = validated_data.pop('ingredients')
-        tags = self.initial_data.get('tags')
+        tags = validated_data.get('tags')
         instance = self.add_tags_ingredients(
             instance, ingredients=ingredients, tags=tags)
         return super().update(instance, validated_data)
