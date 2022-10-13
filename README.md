@@ -9,10 +9,10 @@ Tecnhologies:
  
 [http://51.250.24.224/recipes]
 
-## How to Install & Setup YaMDb API?
+## How to Install & Setup FOODGRAM?
 1. Clone this repository:
 ```
-git clone git@github.com:pyccy/api_yamdb.git
+git clone git@github.com:Alex-Develepor/foodgram-project-react.git
 ```
 2. Cd into infra:
 ```
@@ -54,6 +54,5 @@ docker-compose exec web python manage.py collectstatic --no-input
 ```
 docker-compose exec web python manage.py dumpdata > fixtures.json
 ```
-Navigate to the site in your local rest client: http://127.0.0.1:8000
 
 Ссылка на сайт [http://51.250.24.224/recipes]
