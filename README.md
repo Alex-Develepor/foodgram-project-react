@@ -1,27 +1,38 @@
-Tecnhologies:
+# **Foodgram**
+### **Описание**
 
-- Python 3.9
-- Django 3.2
-- Django REST framework 3.13
-- Nginx
-- Docker
-- Postgres
- 
-[http://51.250.24.224/recipes]
+«Продуктовый помощник»: приложение, на котором пользователи публикуют рецепты кулинарных изделий, подписываться на публикации других авторов и добавлять рецепты в свое избранное. Сервис «Список покупок» позволит пользователю создавать список продуктов, которые нужно купить для приготовления выбранных блюд согласно рецепта/ов.
 
-## How to Install & Setup FOODGRAM?
-1. Clone this repository:
+
+### **Стек**
+![python version](https://img.shields.io/badge/Python-3.8-green)
+![django version](https://img.shields.io/badge/Django-2.0.2-green)
+![drf version](https://img.shields.io/badge/django_rest_framework-3.13-green)
+![Docker](https://img.shields.io/badge/Docker--green)
+
+
+### **Запуск проекта в dev-режиме**
+
+1. Клонируйте репозиторий.
+
 ```
 git clone git@github.com:Alex-Develepor/foodgram-project-react.git
 ```
-2. Cd into infra:
+
+
+2. Установите и активируйте виртуальное окружение
 ```
-cd infra
+python -m venv venv
+``` 
 ```
-3. Create .env and fill it: 
+source venv/Scripts/activate
 ```
-touch .env
+
+3. Установите зависимости из файла requirements.txt
 ```
+pip install -r requirements.txt
+```
+4. В корне проекта создайте .env файл и заполните его
 ```
 EMAIL_HOST_USER=ub1ka@yandex.ru
 EMAIL_HOST_PASSWORD=123qwe
@@ -34,25 +45,23 @@ DB_HOST=db
 DB_PORT=5432
 ALLOWED_HOSTS='*'
 ```
-4.Activate Docker on your computer. Open command line, go to the folder infra of the project and write:
+5. Запустите docker:
 ```
 docker-compose up --build -d
 ```
-5. Make migrations
+6. Создайте миграции:
 ```
 docker-compose exec web python manage.py migrate
 ```
-6. Make superuser
+7. Создайте суперпользователя
 ```
 docker-compose exec web python manage.py createsuperuser
 ```
-7. Make static
+8. Создайте статику
 ```
 docker-compose exec web python manage.py collectstatic --no-input
 ```
-8. Make fixture
-```
-docker-compose exec web python manage.py dumpdata > fixtures.json
-```
 
-Ссылка на сайт [http://51.250.24.224/recipes]
+
+### Автор проекта 
+* [Дворецкий Александр](https://github.com/Alex-Develepor)
